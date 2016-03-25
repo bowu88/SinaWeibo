@@ -134,7 +134,6 @@ class login(object):
 			rsp=rsp.decode('utf-8')
 		except:
 			rsp=rsp.decode('gbk')
-		print(rsp)
 		rst=re.findall('我的首页',rsp)
 		if rst:
 			print('Luckily,dont need login again!')
