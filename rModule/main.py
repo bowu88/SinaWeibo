@@ -18,9 +18,9 @@ sys.path.append(current_path)
 from search import search
 from retweet import retweet
 
-log	=os.path.join(sys.path[0],'log')
-ret =os.path.join(sys.path[0],'retweet')
-web =os.path.join(sys.path[0],'weibo.csv')
+log	=os.path.join(current_path,'log')
+ret =os.path.join(current_path,'retweet')
+web =os.path.join(current_path,'weibo.csv')
 
 '''
 params:
