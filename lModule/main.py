@@ -8,14 +8,13 @@ Sub module main.py file achieve login function.
 
 import os,sys,time
 
-log	=os.path.join(sys.path[0],'log')
-
 __file__ = os.path.abspath(__file__)
 if os.path.islink(__file__):
     __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_path)
+log	=os.path.join(current_path,'log')
 from login import login
 
 '''
@@ -25,10 +24,13 @@ params:
 	c 	:the path of cookie
 '''
 def main(u,p,c):
-	sysLog({'time':time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))})
+	rt={}
+	rt['time']=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
 	t 	=''
 	l 	=login(u,p,c)
-	return l.login()
+	state=l.login()
+	rt['login state']=str(state)
+	return state
 
 '''
 params:
