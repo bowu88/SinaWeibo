@@ -30,6 +30,7 @@ def main(u,p,c):
 	l 	=login(u,p,c)
 	state=l.login()
 	rt['login state']=str(state)
+	sysLog(rt)
 	return state
 
 '''

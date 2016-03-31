@@ -15,31 +15,33 @@ class retweet(object):
 	m 	:mid
 	r 	:reason
 	'''
-	def __init__(self,m,r,c):
+	def __init__(self,c):
 		self.cj=http.cookiejar.LWPCookieJar(c)
 		self.cookie_support=urllib.request.HTTPCookieProcessor(self.cj)
 		self.opener=urllib.request.build_opener(self.cookie_support,urllib.request.HTTPHandler)
 		urllib.request.install_opener(self.opener)
 		self.cj.load(ignore_discard=True, ignore_expires=True)
-		self.form={
+		
+
+	def retweet(self,m,r):
+		form={
 			'appkey':'',
 			'mid':m,
 			'style_type':'1',
 			'reason':r,
+			'is_comment_base':'1',
 			'location':'',
 			'_t':'0'
 		}
-
-	def retweet(self):
-		post_data=urllib.parse.urlencode(self.form).encode(encoding='utf-8')
+		post_data=urllib.parse.urlencode(form).encode(encoding='utf-8')
 		rst=urllib.request.Request(url=self.u,data=post_data,headers=self.headers)
 		rsp=urllib.request.urlopen(rst).read()
 		rst=re.findall('"code":"(\d*)"',str(rsp))
 		if rst and rst[0]=='100000':
 			print('retweet successfully!')
-			return True,rsp
+			return True
 		print('retweet fail!')
-		return False,rsp
+		return False
 
 if __name__=='__main__':
 	c='D:\\workspace\\python\\SinaWeibo\\config\\cookie'

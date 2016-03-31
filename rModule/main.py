@@ -7,11 +7,12 @@
 Sub module main.py file achieve retweet function.
 '''
 
-import os,sys,time
+import os,sys,time,re,random
+import pymongo
 
 __file__ = os.path.abspath(__file__)
 if os.path.islink(__file__):
-    __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
+	__file__ = getattr(os, 'readlink', lambda x: x)(__file__)
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_path)
@@ -19,8 +20,6 @@ from search import search
 from retweet import retweet
 
 log	=os.path.join(current_path,'log')
-ret =os.path.join(current_path,'retweet')
-web =os.path.join(current_path,'weibo.csv')
 
 '''
 params:
@@ -28,71 +27,120 @@ params:
 	p 	:the page num
 	c 	:cookie file
 '''
-def main(t,p,c):
-	rt={}
-	rt['time']=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-	state,rst=getOneWeibo()
-	if state is False:
-		sh 	=search(t,p,c)
-		state,js 	=sh.search()
-		if state:
-			rt['response of search']=js
-			setWeiboList(js)
-		state,rst=getOneWeibo()
-	if state is False:
-		sysLog({'oneWeibo':'No more weibo to retweet!'})
+def main(c,t='转发抽奖',p=2):
+	sh 	=search(c)
+	lt 	=sh.search(t,p)
+	setWeiboMongo(lt)
+	rst=getOneWeibo()
+	if rst is False:
 		print('No more weibo to retweet!')
 		return False
-	rt['the detail infomation of retweeted weibo']=rst
-	rt=retweet(rst['mid'],rst['reason'],c)
-	state,rsp=rt.retweet()
-	rt['response of retweet']=rsp
-	sysLog(rt)
+	rt=retweet(c)
+	state=rt.retweet(rst['mid'],rst['reason'])
 	if state:
-		with open(ret, 'a') as f:
-			f.write(rst['mid']+',')
-			f.close()
-	return state
-	
+		return rst
+	return False
+
+def get_db():
+	client = pymongo.MongoClient(host='localhost', port=27017)
+	db = client['weibo']
+	return db
 
 def getOneWeibo():
-	pass
+	reason=['希望是我','谢谢','如果我能中就好了','快点抽吧','我都等不及了','好想要啊','可以中一次吗','试试手气','随手转发','不要骗我哦']
+	db=get_db()
+	cl=db['retweet']
+	rst=cl.find({'retweet':0}).sort("mid", pymongo.ASCENDING)
+	for rt in rst:
+		cl.update({'_id':rt['_id']},{'$set':{'retweet':1}})
+		print('update',rt['mid'],' retweet=1')
+		if len(rt['url'])>4:
+			print(rt['mid'],' too many users to follow,find another weibo')
+			continue
+		rt['reason']=reason[random.randint(0,len(reason)-1)]
+		if rt['friend']>0:
+			cl=db['follow']
+			rst=cl.find({'follow':1})
+			rint=random.randint(0,rst.count()-rt['friend'])
+			for i in range(rint,rint+rt['friend']):
+				rt['reason']=rt['reason']+'@'+rst[i]['nick']+' '
+		return rt
+	return False
 
-'''
-write the weibo list into `weibo` file,include:
-	follow 	:
-	mid 	:
-	url of follow 	:
+def setWeiboMongo(rst):
+	db=get_db()
+	cl=db['retweet']
+	try:
+		maxMid=cl.find().sort("mid", pymongo.DESCENDING)[0]['mid']
+	except:
+		maxMid='0'
+	coll=[]
+	for c in rst:
+		dt={}
+		cm=re.findall('comment_txt.*?/p',c)[0]
+		dt['mid']=returnMid(c)
+		if dt['mid']<=maxMid:
+			break
+		dt['url']=returnUrl(c)
+		dt['friend']=returnFri(cm)
+		dt['retweet']=0
+		coll.append(dt)
+	if coll:
+		cid=cl.insert(coll)
+	print('insert',len(coll),' retweet document!')
+	return coll
 
-'''
-def setWeiboList(js):
-	pass
+def returnMid(c):
+	return re.findall('\d{16}',c)[0]
 
-'''
-params:
-	d 	:dict
-	f 	:written file
-'''
-def sysLog(d,f 	=log):
-	f=open(f,'a',encoding 	='utf-8')
-	for i in d:
-		f.write(i+':'+str(d[i])+'\n')
-	f.close()
+def returnUrl(c):
+	r=[]
+	nick,url=re.findall('W_textaW_fb"nick-name="(.*?)"href="(.*?)"target',c)[0]
+	r.append({'link':url,'nick':nick})
+	cm=re.findall('comment_txt.*?/p',c)[0]
+	if re.findall('关注',cm):
+		tr=[]
+		url=[]
+		nick=[]
+		rst=re.findall('ahref="(http.*?)"usercard="name=(.*?)[&|"]',cm)
+		for i in rst:
+			url.append(i[0])
+			nick.append(i[1])
+		for i in range(len(url)):
+			d={}
+			lt=re.findall('抽奖|好友',url[i])
+			if len(lt)==0:
+				d['link']=url[i]
+				d['nick']=nick[i]
+				tr.append(d)
+		
+		for i in tr:
+			flag=False
+			for j in r:
+				if i['nick']==j['nick']:
+					flag=True
+					break
+			if not flag:
+				r.append(i)
+	return r
 
+def returnFri(cm):
+	d=0
+	c={
+		'一':1,'1':1,'二':2,'2':2,'三':3,'3':3,'四':4,'4':4,'五':5,'5':5,'六':6,'6':6
+	}
+	s=re.findall('(.{1})[位|个].{0,4}好友',cm)
+	if s:
+		try:
+			d=c[s[0]]
+		except:
+			pass
+	return d
 
 if __name__=='__main__':
-	pass
-
-
-'''
-@微博抽奖平台
-关注@smalltail小尾巴 转发此微博并@3位好友 
-31号抽出
-艾特两个好友
-关注店主@ALIN-STUDIO 并转发这条微博 @ 三个真实好友
-'''
-
-'''
-refer_flag=1001030103
-mid
-'''
+	c='D:\\workspace\\python\\SinaWeibo\\config\\cookie'
+	t='转发抽奖'
+	p=2
+	sh 	=search(c)
+	rst 	=sh.search(t,p)
+	setWeiboList(rst)

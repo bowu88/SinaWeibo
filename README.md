@@ -7,7 +7,29 @@
 * [rModule](https://github.com/chengshuyi/SinaWeibo/blob/master/rModule/README.md):转发模块  
 * [fModule](https://github.com/chengshuyi/SinaWeibo/blob/master/fModule/README.md):关注模块  
 
-## 每一个模块的要求
-* 必须要有一个log文件,记录操作的关键内容(方便日后的debug)  
-* main.py调用每一个模块,由main.py完成模块之间的交互作用  
-* 每一个模块要有main.py文件,用于与主目录main.py的交互
+## 环境配置
+* python version 3.5  
+* python extra library:  
+	- requests  
+	- rsa  
+	- binascii  
+	- base64  
+	- pymongo  
+	- json  
+* mongodb  
+
+## 使用方法
+```python
+u=''		#modify to your username(phone number,email)
+p='' 		#modify to your password
+```
+
+##mongodb数据库`weibo`
+* follow collection  
+	- {'url':'http://weibo.com/n/%E6%96%87%E9%83%BD-%E6%B1%A4%E5%AE%B6%E5%87%A4?refer_flag=1001030001_','date':'unix time stamp','nick':'name','follow':1}  
+	- {'url':'http://weibo.com/u/3404872632?from=myfollow_all','date':'unix time stamp','nick':'name','follow':1}  
+	- 2种url格式,第一种是属于从微博信息中提取的url,仍未关注。第二种是从主页已关注列表获取的url。  
+* retweet collection  
+	- {'mid':'3958445813689070','url':[{'link':'http://weibo.com/n/%E4%B9%90%E8%AF%8D%E8%83%8C%E5%8D%95%E8%AF%8D?refer_flag=1001030001_','nick':'name'},{'link':'http://weibo.com/n/%E6%96%87%E9%83%BD-%E6%B1%A4%E5%AE%B6%E5%87%A4?refer_flag=1001030001_','nick':'name'],'friend':'3','retweet':0}  
+	- 在retweet之后，将url和date插入follow collection  
+

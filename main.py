@@ -4,45 +4,22 @@
 # @email	: c15271843451@gmail.com
 
 import sys,os
+import lModule.main as lm
+import rModule.main as rm
+import fModule.main as fm
+import time
 
 cookie	=os.path.join(sys.path[0],'config','cookie')
 log	=os.path.join(sys.path[0],'log')
+u='15271843451'	#username
+p='qq520.1314'	#password
 
-class start(object):
-	u=''	#username
-	p=''	#password
-	def __init__(self,flag):
-		self.flag	=flag
-	
-	def g(self):
-		f 	=self.flag
-		if f==0:
-			u()	#unfollow
-		elif f==1 or f==2:
-			rst,dt=g()
-			if rst if True:
-				r()	#retweet 
-			g()	#get one weibo infomation
-			
-
-'''
-params:
-	d:dict
-	f:written file
-'''
-def sysLog(d,f 	=log):
-	f=open(f,'a',encoding 	='utf-8')
-	for i in d:
-		f.write(i+':'+str(d[i])+'\n')
-	f.close()
-
+def retweet():
+	fm.main(cookie,rm.main(cookie))
 def main():
-	import random,time
-	flag	=random.randint(0,7)
-	print('flag:',flag)
-	sysLog({'time':time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))+'\tflag:'+str(flag)})
-	st 	=start(flag)
-	rt 	=st.g()
-
+	if lm.main(u,p,cookie):
+		retweet()
 if __name__=='__main__':
+	startTime=time.time()
 	main()
+	print('finish total time:',time.time()-startTime)
