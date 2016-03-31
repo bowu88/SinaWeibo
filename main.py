@@ -11,8 +11,8 @@ import time
 
 cookie	=os.path.join(sys.path[0],'config','cookie')
 log	=os.path.join(sys.path[0],'log')
-u='15271843451'	#username
-p='qq520.1314'	#password
+u=''	#username
+p=''	#password
 
 def retweet():
 	fm.main(cookie,rm.main(cookie))
